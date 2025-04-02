@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Usuarios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .user-card, .menu-item {
+      transition: all 0.3s ease;
+    }
+    .user-card:hover {
+      transform: translateY(-2px);
+    }
+    .menu-item.active {
+      background-color: #1e40af;
+      font-weight: bold;
+    }
+    .modal {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .dark-mode {
+      background-color: #1a202c;
+      color: #f7fafc;
+    }
+    .dark-mode .user-card {
+      background-color: #2d3748;
+      color: #f7fafc;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+  <div class="grid grid-cols-1 md:grid-cols-[auto_1fr] min-h-screen">
+    <!-- Barra Lateral -->
+    <aside id="sidebar" class="bg-blue-800 text-white p-4 w-64">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold">Menú</h2>
+        <button id="dark-mode-btn" class="p-2 rounded-full hover:bg-blue-700">
+          🌓
+        </button>
+      </div>
+      <nav aria-label="Menú principal">
+        <ul class="space-y-2">
+          <li>
+            <a href="#" class="menu-item block p-2 hover:bg-blue-700 rounded" data-section="dashboard">
+              📊 Dashboard
+            </a>
+          </li>
+          <li>
+            <a href="#" class="menu-item block p-2 hover:bg-blue-700 rounded active" data-section="usuarios">
+              👥 Usuarios
+            </a>
+          </li>
+          <li>
+            <a href="#" class="menu-item block p-2 hover:bg-blue-700 rounded" data-section="configuracion">
+              ⚙️ Configuración
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="p-4">
+      <!-- Encabezado -->
+      <header class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Panel de Usuarios</h1>
+        <div class="flex items-center space-x-4">
+          <button id="refresh-users" class="p-2 bg-green-500 text-white rounded hover:bg-green-600">
+            🔄 Actualizar
+          </button>
+          <button id="notifications-btn" class="relative p-2 rounded-full hover:bg-gray-200">
+            🔔
+            <span class="notification-badge absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hidden">3</span>
+          </button>
+          <button id="menu-btn" aria-label="Abrir menú" class="md:hidden p-2 bg-blue-600 text-white rounded">
+            ☰ Menú
+          </button>
+        </div>
+      </header>
+
+      <!-- Contenido Dinámico -->
+      <div id="content-container">
+        <!-- Sección de Usuarios -->
+        <div id="usuarios-section" class="section-content">
+          <div class="mb-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold">Lista de Usuarios</h2>
+            <div class="flex space-x-2">
+              <input type="text" id="user-search" placeholder="Buscar usuario..." class="p-2 border rounded">
+              <select id="role-filter" class="p-2 border rounded">
+                <option value="all">Todos</option>
+                <option value="Admin">Admin</option>
+                <option value="Editor">Editor</option>
+                <option value="Usuario">Usuario</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="users-container">
+            <!-- Tarjetas se cargarán con JS -->
+          </div>
+          <div class="mt-4 flex justify-center">
+            <button id="load-more" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+              Cargar más usuarios
+            </button>
+          </div>
+        </div>
+
+        <!-- Sección de Dashboard -->
+        <div id="dashboard-section" class="section-content hidden">
+          <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-4">
+            <h2 class="text-xl font-bold mb-4">📈 Estadísticas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                <p class="text-gray-600 dark:text-gray-300">Usuarios totales</p>
+                <p class="text-3xl font-bold" id="total-users">0</p>
+              </div>
+              <div class="bg-green-50 dark:bg-green-900 p-4 rounded-lg">
+                <p class="text-gray-600 dark:text-gray-300">Administradores</p>
+                <p class="text-3xl font-bold" id="admin-users">0</p>
+              </div>
+              <div class="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg">
+                <p class="text-gray-600 dark:text-gray-300">Editores</p>
+                <p class="text-3xl font-bold" id="editor-users">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de Configuración -->
+        <div id="configuracion-section" class="section-content hidden">
+          <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold mb-4">⚙️ Configuración del Sistema</h2>
+            <form id="settings-form">
+              <div class="mb-4">
+                <label class="block text-gray-700 dark:text-gray-300 mb-2">Nacionalidad de usuarios</label>
+                <select id="user-nationality" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+                  <option value="es">Españoles</option>
+                  <option value="us">Estadounidenses</option>
+                  <option value="fr">Franceses</option>
+                  <option value="br">Brasileños</option>
+                  <option value="random">Aleatoria</option>
+                </select>
+              </div>
+              <div class="mb-4">
+                <label class="block text-gray-700 dark:text-gray-300 mb-2">Cantidad por carga</label>
+                <input type="number" id="users-per-load" min="1" max="50" value="10" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600">
+              </div>
+              <button type="button" id="save-settings" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Guardar Cambios
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie de Página -->
+      <footer class="mt-8 text-center text-gray-600 dark:text-gray-400">
+        <p>© 2024 Panel de Usuarios. Todos los derechos reservados.</p>
+        <p class="text-sm mt-1">Datos proporcionados por <a href="https://randomuser.me/" class="text-blue-500 hover:underline" target="_blank">Random User API</a></p>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Modal de Notificaciones -->
+  <div id="notifications-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold dark:text-white">Notificaciones</h3>
+        <button id="close-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+          ✕
+        </button>
+      </div>
+      <ul class="space-y-2">
+        <li class="p-2 border-b dark:border-gray-700">Nuevo usuario registrado</li>
+        <li class="p-2 border-b dark:border-gray-700">Actualización del sistema disponible</li>
+        <li class="p-2 border-b dark:border-gray-700">Tarea pendiente de revisión</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="./js/main.js"></script>
+</body>
+</html>
